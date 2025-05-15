@@ -11,72 +11,75 @@ The core idea is to break down large development tasks into manageable subtasks,
 ### Core Philosophy
 
 *   **Task Delegation**: All inter-role work transitions are managed by creating new subtasks (`new_task` tool) for the appropriate specialized mode. Modes do not switch context themselves; they complete their assigned subtask and report back.
-*   **Standardized Documentation**: All key documents (requirements, design, plans, reports, etc.) are generated in Markdown format and stored in a dedicated `Markdown/` subdirectory. A shared `Markdown/Function_Reference_Table.csv` is maintained by developers.
-*   **Version Control Integration**: The workflow includes Git repository initialization and per-module commits after successful validation, ensuring milestones are tracked. A `.gitignore` file is created to exclude irrelevant files (like the `Markdown/` directory itself from being a source of merge conflicts for documentation drafts, though final documentation could be versioned if desired separately).
-*   **Iterative Refinement & Validation**: Modules undergo development, initial testing, and then a final validation against requirements before being accepted and committed. A rework loop is in place for both minor and major issues.
+*   **Standardized Documentation**: All key documents (requirements, design, plans, reports, etc.) are generated in Markdown format and stored in a dedicated `Markdown/` subdirectory, organized by type and module.
+*   **Version Control Integration**: The workflow includes Git repository initialization (local only by design architect) and per-module development commits by module leads. The Project Orchestrator handles major rollbacks. A `.gitignore` file is created to exclude irrelevant files (like the `Markdown/` directory itself).
+*   **Iterative Development & Comprehensive Testing**: Modules undergo development with internal acceptance checks by the Module Development Lead. A comprehensive testing phase is conducted *after all modules are developed*, followed by final validation and potential rework loops.
+*   **Documentation-First Problem Solving**: Developers and testers are strongly encouraged to consult all provided documentation thoroughly before escalating issues or ambiguities.
 
 ### The Roles (Modes)
 
 This model defines the following specialized AI modes:
 
-1.  **`solutions-design-lead` (方案设计主管)**
-    *   **Responsibilities**: Gathers and confirms all user requirements through iterative questioning. Orchestrates the creation of system architecture and detailed module designs by delegating to `system-architect` and `detailed-designer` modes. For each fully designed module, delegates its implementation and initial testing to a `module-delivery-lead`. Manages a final validation and conditional rework/commit lifecycle for each completed module.
-    *   **Key Outputs**: `Markdown/Requirements_Specification_Document.md`, `Markdown/Initial_Project_Plan.md`, delegates tasks, triggers Git commits.
+1.  **`project-orchestrator` (项目编排者)**
+    *   **Responsibilities**: Gathers and confirms all user requirements through iterative questioning. Orchestrates the entire design process by delegating to the `lead-design-architect`. For each fully designed module, delegates its development to a `module-development-lead`. After all module development is complete, orchestrates a comprehensive testing phase involving `qa-tester`(s). Manages final project validation against requirements and handles major Git rollbacks if catastrophic issues arise.
+    *   **Key Outputs**: `Markdown/ProjectDocs/Requirements_Specification_Document.md`, delegates tasks, manages overall project flow and major Git interventions.
 
-2.  **`system-architect` (系统架构师)**
-    *   **Responsibilities**: Responding to a subtask from the `Solutions Design Lead`, transforms requirements into a high-level technical blueprint. Defines system architecture, major components, interfaces, selects the technology stack, and creates a preliminary high-level task list. Initializes the Git repository and creates the `.gitignore` file.
-    *   **Key Outputs**: `Markdown/Outline_Design_Document.md`, `Markdown/Preliminary_HighLevel_TaskList.md`, `.gitignore`, initializes Git repository.
+2.  **`lead-design-architect` (首席设计架构师)**
+    *   **Responsibilities**: Responding to a single comprehensive subtask from the `Project Orchestrator`. Responsible for: system architecture definition, project file structure design, overall test strategy (including methods, environment needs, general flow, test accounts, planning for linear development/testing), initializing a local Git repository, creating the `.gitignore` file, breaking the project into modules, and creating detailed technical designs and development task lists for ALL modules.
+    *   **Key Outputs**: `Markdown/ProjectDocs/Outline_Design_Document.md`, `Markdown/ProjectDocs/Test_Strategy_Plan.md`, `Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_Design.md` (for all modules), `Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_TaskList.md` (for all modules), `.gitignore`, initializes local Git repository.
 
-3.  **`detailed-designer` (详细设计师)**
-    *   **Responsibilities**: Responding to subtasks from the `Solutions Design Lead` for specific modules. Creates in-depth technical designs for each assigned module and refines the module-specific sections of the preliminary task list into a detailed task list for development.
-    *   **Key Outputs**: `Markdown/[ModuleName]_Detailed_Design.md`, `Markdown/[ModuleName]_Detailed_TaskList.md` (for each module).
+3.  **`module-development-lead` (模块开发主管)**
+    *   **Responsibilities**: Responding to a subtask from the `Project Orchestrator` for a specific module. Manages the development of that assigned module. Reads all relevant project and module documentation. Creates and manages subtasks for `implementation-developer`(s) strictly following the module's detailed task list. Performs acceptance checks on completed development sub-parts. Makes incremental Git commits (with detailed messages) for validated sub-parts of the module. Can perform minor, recent Git reverts *within their module's development lifecycle* if necessary. Reports the module's development completion.
+    *   **Key Outputs**: Manages module-specific development subtasks, performs Git commits for module parts, may produce `Markdown/Modules/[ModuleName]/[ModuleName]_Development_Completion_Summary.md`.
 
-4.  **`module-delivery-lead` (模块交付主管)**
-    *   **Responsibilities**: Responding to a subtask from the `Solutions Design Lead` for a specific module. Manages the development and *initial* testing of that assigned module by creating and managing subtasks for `implementation-developer` and `qa-tester` modes. Reports the module's initial completion for final validation.
-    *   **Key Outputs**: Manages module-specific subtasks, may produce `Markdown/[ModuleName]_Progress_Report.md` and `Markdown/[ModuleName]_Initial_Completion_Summary.md`.
+4.  **`implementation-developer` (实施开发工程师)**
+    *   **Responsibilities**: Responding to subtasks from a `Module Development Lead`. **Must read their assigned module's design and task list documents first.** Writes high-quality code according to the detailed design specifications for assigned tasks. Proactively fixes errors introduced during their work. Adheres to the defined project directory structure.
+    *   **Key Outputs**: Source code.
 
-5.  **`implementation-developer` (实施开发工程师)**
-    *   **Responsibilities**: Responding to subtasks from a `Module Delivery Lead`. Writes high-quality code according to the detailed design specifications for assigned tasks. Collaboratively maintains the shared `Markdown/Function_Reference_Table.csv` by appending details of new/modified functions.
-    *   **Key Outputs**: Source code, updates to `Markdown/Function_Reference_Table.csv`.
-
-6.  **`qa-tester` (质量保证测试工程师)**
-    *   **Responsibilities**: Responding to subtasks. Performs two types of testing:
-        1.  Initial module testing (tasked by `Module Delivery Lead`): Designs and executes test cases based on detailed designs, reports bugs.
-        2.  Final module validation (tasked by `Solutions Design Lead`): Validates the "completed" module against the overall requirements specification.
-    *   **Key Outputs**: `Markdown/[ModuleName]_[TestType]_Test_Cases.md`, `Markdown/Bug_Report_[BugID].md`, `Markdown/[ModuleName]_Final_Validation_Report.md`.
+5.  **`qa-tester` (质量保证测试工程师)**
+    *   **Responsibilities**: Responding to subtasks from the `Project Orchestrator` *after all module development is complete*. **Must read all relevant project documentation (requirements, architecture, test strategy, module designs) first.** Checks and prepares the testing environment (using non-interactive commands, preferably Docker). Executes comprehensive testing as defined in the `Test_Strategy_Plan.md` (module tests, integration, system, E2E, regression, including any deferred tests). Reports bugs and verifies fixes.
+    *   **Key Outputs**: Test execution results, `Markdown/Modules/[ModuleName]/[ModuleName]_Bug_Reports/Bug_Report_[BugID].md` (or central bug reports), test summary reports (e.g., `Markdown/Testing/Overall_Test_Summary.md`).
 
 ### Workflow Overview
 
-1.  **Discovery & Initial Planning**: The `Solutions Design Lead` works with the user to finalize requirements.
-2.  **Architecture**: The `Solutions Design Lead` tasks the `System Architect` to define the system architecture, tech stack, preliminary task list, initialize Git, and create `.gitignore`.
-3.  **Detailed Design**: The `Solutions Design Lead` tasks `Detailed Designer`(s) for each module to create detailed designs and refine task lists.
-4.  **Module Delivery**: For each module, the `Solutions Design Lead` tasks a `Module Delivery Lead`.
-    *   The `Module Delivery Lead` tasks `Implementation Developer`(s) for coding and `QA Tester`(s) for initial testing.
-    *   Developers update the `Function_Reference_Table.csv`.
-5.  **Final Validation**: Once a `Module Delivery Lead` reports a module as initially complete, the `Solutions Design Lead` tasks a `QA Tester` for final validation against requirements.
-6.  **Commit or Rework**:
-    *   **Pass**: `Solutions Design Lead` commits the module to Git.
-    *   **Fail (Minor Issues)**: `Solutions Design Lead` tasks the `Module Delivery Lead` to manage fixes and re-testing. The cycle repeats from step 5.
-    *   **Fail (Major Issues)**: `Solutions Design Lead` may trigger a redesign/re-implentation for the module, starting from tasking a `Detailed Designer` again.
-7.  This process repeats for all modules.
+1.  **Discovery & Requirements**: The `Project Orchestrator` works with the user to finalize requirements (`Markdown/ProjectDocs/Requirements_Specification_Document.md`).
+2.  **Comprehensive Design**: The `Project Orchestrator` tasks the `Lead Design Architect` to:
+    *   Define system architecture, file structure, tech stack (`Markdown/ProjectDocs/Outline_Design_Document.md`).
+    *   Define the overall test strategy, including environment, accounts, and planning for linear testing (`Markdown/ProjectDocs/Test_Strategy_Plan.md`).
+    *   Initialize a local Git repository and create `.gitignore`.
+    *   For ALL modules: Create detailed designs (`Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_Design.md`) and detailed development task lists (`Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_TaskList.md`).
+3.  **Module Development**: For each module, the `Project Orchestrator` tasks a `Module Development Lead`.
+    *   The `Module Development Lead` reads all relevant project & module docs, then delegates development tasks from their module's task list to `Implementation Developer`(s), instructing them to read module docs.
+    *   Developers write code, fix their own bugs, and report task completion.
+    *   The `Module Development Lead` performs acceptance checks on completed development sub-parts and, if satisfactory, commits them to Git with detailed messages. Minor, recent reverts can be handled at this stage.
+    *   The `Module Development Lead` reports when all development tasks for their module are complete and committed.
+4.  **Comprehensive Testing**: Once ALL modules have completed development, the `Project Orchestrator` tasks `QA Tester`(s) to:
+    *   Read all relevant documentation.
+    *   Verify/prepare the test environment.
+    *   Execute all tests defined in the `Test_Strategy_Plan.md` (module, integration, system, E2E, regression, deferred tests).
+    *   Report bugs.
+5.  **Bug Fixing**: If bugs are found, the `Project Orchestrator` tasks the relevant `Module Development Lead`(s) to coordinate fixes with `Implementation Developer`(s). Testers then verify fixes. This cycle repeats until the software meets quality criteria.
+6.  **Final Validation & Release**:
+    *   The `Project Orchestrator` confirms with the user if the project meets all requirements based on the comprehensive testing results.
+    *   **Major Rollback (Catastrophic Failure)**: If testing reveals major, unfixable issues, the `Project Orchestrator` may, after user confirmation, perform a `git reset --hard` to a state before the problematic module(s) development began, and then re-initiate the design/development for those parts.
+    *   (If successful, a formal release process like tagging would be performed by the Project Orchestrator, though not explicitly detailed as a separate step here, it's implied post-validation).
+7.  This process aims for a sequential flow, especially with the architect planning for linear development/testing where possible.
 
 ### Key Artifacts
 
-*   `Markdown/Requirements_Specification_Document.md`: Overall project requirements.
-*   `Markdown/Outline_Design_Document.md`: High-level system architecture and technology stack.
-*   `Markdown/Preliminary_HighLevel_TaskList.md`: Initial breakdown of tasks by the architect.
-*   `Markdown/[ModuleName]_Detailed_Design.md`: Detailed technical design for a specific module.
-*   `Markdown/[ModuleName]_Detailed_TaskList.md`: Refined and detailed tasks for a specific module.
-*   `Markdown/Function_Reference_Table.csv`: A CSV file listing all significant functions, their descriptions, inputs/outputs, etc., maintained by developers.
-    *   Format: `"File Path","Function Name","Function Description","Input(s)","Output(s)","Remarks"`
-*   `Markdown/[ModuleName]_Final_Validation_Report.md`: Report on whether a module meets requirements.
-*   `Markdown/Project_Changelog.md` (Optional): For logging major events like commits or rework decisions.
-*   `.gitignore`: Specifies intentionally untracked files for Git (includes `Markdown/` by default for working drafts).
+*   `Markdown/ProjectDocs/Requirements_Specification_Document.md`: Overall project requirements.
+*   `Markdown/ProjectDocs/Outline_Design_Document.md`: High-level system architecture, technology stack, and project file structure.
+*   `Markdown/ProjectDocs/Test_Strategy_Plan.md`: Overall testing strategy, methods, environment, test accounts, and notes on deferred tests due to dependencies.
+*   `Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_Design.md`: Detailed technical design for a specific module.
+*   `Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_TaskList.md`: Detailed development tasks for a specific module.
+*   Test artifacts (Test Cases, Bug Reports, Test Summaries) stored in `Markdown/Testing/` or `Markdown/Modules/[ModuleName]/[Subfolder]/`.
+*   `Markdown/ProjectDocs/Project_Changelog.md` (Optional): For logging major events.
+*   `.gitignore`: Specifies intentionally untracked files for Git (includes `Markdown/`).
 
 ### How to Use
 
 These definitions are intended to be used as custom modes within an AI assistant (like Roo Code) that supports:
-*   Tool usage (especially `new_task`, `execute_command`, `write_to_file`, `insert_content`, `ask_followup_question`).
+*   Tool usage (especially `new_task`, `execute_command`, `write_to_file`, `read_file`, `ask_followup_question`).
 *   Persistent context and memory across subtasks (or mechanisms to pass necessary context).
 *   The ability to parse and act upon detailed instructions provided in the `customInstructions` for each mode.
 
@@ -95,72 +98,75 @@ The provided JSON (not in this README, but the source of these definitions) can 
 ### 核心理念
 
 *   **任务委派**：所有跨角色的工作转换都是通过为适当的专门模式创建新的子任务（使用 `new_task` 工具）来管理的。模式本身不切换上下文；它们完成分配的子任务并汇报。
-*   **标准化文档**：所有关键文档（需求、设计、计划、报告等）均以 Markdown 格式生成，并存储在专用的 `Markdown/` 子目录中。开发人员共同维护一个共享的 `Markdown/Function_Reference_Table.csv`。
-*   **版本控制集成**：工作流包括 Git 仓库初始化和在成功验证后按模块提交，确保里程碑得到跟踪。创建一个 `.gitignore` 文件以排除不相关的文件（例如 `Markdown/` 目录本身，以防止文档草稿的合并冲突，但最终文档如果需要可以单独版本化）。
-*   **迭代优化与验证**：模块经过开发、初步测试，然后在被接受和提交之前根据需求进行最终验证。为次要和主要问题都设置了返工循环。
+*   **标准化文档**：所有关键文档（需求、设计、计划、报告等）均以 Markdown 格式生成，并存储在专用的 `Markdown/` 子目录中，按类型和模块组织。
+*   **版本控制集成**：工作流包括 Git 仓库初始化（由设计架构师本地进行）和模块主管在模块开发过程中进行的提交。项目编排者处理主要的版本回退。创建一个 `.gitignore` 文件以排除不相关的文件（例如 `Markdown/` 目录本身）。
+*   **迭代开发与全面测试**：模块在模块开发主管的内部验收检查下进行开发。在所有模块开发完成后，将进行全面的测试阶段，然后进行最终验证和潜在的返工循环。
+*   **文档优先的问题解决**：强烈鼓励开发人员和测试人员在升级问题或模糊不清之处之前，彻底查阅所有提供的文档。
 
 ### 角色 (模式)
 
 该模型定义了以下专门的 AI 模式：
 
-1.  **`solutions-design-lead` (方案设计主管)**
-    *   **职责**: 通过迭代提问收集并确认所有用户需求。通过委派给 `system-architect` 和 `detailed-designer` 模式来编排系统架构和详细模块设计的创建。对于每个完整设计的模块，将其实现和初步测试委派给 `module-delivery-lead`。管理每个已完成模块的最终验证和有条件的返工/提交流程。
-    *   **主要产出**: `Markdown/Requirements_Specification_Document.md`, `Markdown/Initial_Project_Plan.md`, 委派任务, 触发 Git 提交。
+1.  **`project-orchestrator` (项目编排者)**
+    *   **职责**: 通过迭代提问收集并确认所有用户需求。通过委派给 `lead-design-architect` 来编排整个设计过程。对于每个完整设计的模块，将其开发委派给 `module-development-lead`。在所有模块开发完成后，编排涉及 `qa-tester` 的全面测试阶段。管理最终的项目验证，并在出现灾难性问题时处理主要的 Git 回退。
+    *   **主要产出**: `Markdown/ProjectDocs/Requirements_Specification_Document.md`, 委派任务, 管理整体项目流程和主要的 Git 干预。
 
-2.  **`system-architect` (系统架构师)**
-    *   **职责**: 响应 `方案设计主管` 的子任务，将需求转化为高级技术蓝图。定义系统架构、主要组件、接口，选择技术栈，并创建一个初步的高级任务列表。初始化 Git 仓库并创建 `.gitignore` 文件。
-    *   **主要产出**: `Markdown/Outline_Design_Document.md`, `Markdown/Preliminary_HighLevel_TaskList.md`, `.gitignore`, 初始化 Git 仓库。
+2.  **`lead-design-architect` (首席设计架构师)**
+    *   **职责**: 响应 `项目编排者` 的单个综合子任务。负责：系统架构定义、项目文件结构设计、总体测试策略（包括方法、环境需求、一般流程、测试账户、规划线性开发/测试）、初始化本地 Git 仓库、创建 `.gitignore` 文件、将项目分解为模块，并为所有模块创建详细的技术设计和开发任务列表。
+    *   **主要产出**: `Markdown/ProjectDocs/Outline_Design_Document.md`, `Markdown/ProjectDocs/Test_Strategy_Plan.md`, `Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_Design.md` (针对所有模块), `Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_TaskList.md` (针对所有模块), `.gitignore`, 初始化本地 Git 仓库。
 
-3.  **`detailed-designer` (详细设计师)**
-    *   **职责**: 响应 `方案设计主管` 针对特定模块的子任务。为每个分配的模块创建深入的技术设计，并将初步任务列表中特定于模块的部分完善为详细的开发任务列表。
-    *   **主要产出**: `Markdown/[ModuleName]_Detailed_Design.md`, `Markdown/[ModuleName]_Detailed_TaskList.md` (针对每个模块)。
+3.  **`module-development-lead` (模块开发主管)**
+    *   **职责**: 响应 `项目编排者` 针对特定模块的子任务。管理该已分配模块的开发。阅读所有相关的项目和模块文档。严格按照模块的详细任务列表为 `implementation-developer` 创建和管理子任务。对已完成的开发子部分执行验收检查。为模块的已验证子部分进行增量 Git 提交（附带详细消息）。如果需要，可以在模块的开发生命周期内执行次要的、最近的 Git 还原。报告模块的开发完成情况。
+    *   **主要产出**: 管理模块特定的开发子任务, 为模块部件执行 Git 提交, 可能会产出 `Markdown/Modules/[ModuleName]/[ModuleName]_Development_Completion_Summary.md`。
 
-4.  **`module-delivery-lead` (模块交付主管)**
-    *   **职责**: 响应 `方案设计主管` 针对特定模块的子任务。通过为 `implementation-developer` 和 `qa-tester` 模式创建和管理子任务，来管理该已分配模块的开发和*初步*测试。报告模块的初步完成情况以进行最终验证。
-    *   **主要产出**: 管理模块特定的子任务, 可能会产出 `Markdown/[ModuleName]_Progress_Report.md` 和 `Markdown/[ModuleName]_Initial_Completion_Summary.md`。
+4.  **`implementation-developer` (实施开发工程师)**
+    *   **职责**: 响应 `模块开发主管` 的子任务。**必须首先阅读其分配模块的设计和任务列表文档。** 根据分配任务的详细设计规范编写高质量代码。主动修复在工作中引入的错误。遵守定义的项目目录结构。
+    *   **主要产出**: 源代码。
 
-5.  **`implementation-developer` (实施开发工程师)**
-    *   **职责**: 响应 `模块交付主管` 的子任务。根据分配任务的详细设计规范编写高质量代码。通过追加新/修改函数的详细信息，共同维护共享的 `Markdown/Function_Reference_Table.csv`。
-    *   **主要产出**: 源代码, 更新 `Markdown/Function_Reference_Table.csv`。
-
-6.  **`qa-tester` (质量保证测试工程师)**
-    *   **职责**: 响应子任务。执行两种类型的测试：
-        1.  初步模块测试 (由 `模块交付主管` 分配任务): 根据详细设计设计和执行测试用例，报告错误。
-        2.  最终模块验证 (由 `方案设计主管` 分配任务): 根据总体需求规范验证“已完成”的模块。
-    *   **主要产出**: `Markdown/[ModuleName]_[TestType]_Test_Cases.md`, `Markdown/Bug_Report_[BugID].md`, `Markdown/[ModuleName]_Final_Validation_Report.md`。
+5.  **`qa-tester` (质量保证测试工程师)**
+    *   **职责**: 响应 `项目编排者` 在所有模块开发完成后的子任务。**必须首先阅读所有相关的项目文档（需求、架构、测试策略、模块设计）。** 检查并准备测试环境（使用非交互式命令，最好是 Docker）。按照 `Test_Strategy_Plan.md` 中的定义执行全面测试（模块测试、集成测试、系统测试、端到端测试、回归测试，包括任何延迟的测试）。报告错误并验证修复。
+    *   **主要产出**: 测试执行结果, `Markdown/Modules/[ModuleName]/[ModuleName]_Bug_Reports/Bug_Report_[BugID].md` (或中央错误报告), 测试摘要报告 (例如 `Markdown/Testing/Overall_Test_Summary.md`)。
 
 ### 工作流概览
 
-1.  **发现与初步规划**: `方案设计主管` 与用户一起最终确定需求。
-2.  **架构设计**: `方案设计主管` 分配任务给 `系统架构师` 来定义系统架构、技术栈、初步任务列表、初始化 Git 并创建 `.gitignore`。
-3.  **详细设计**: `方案设计主管` 为每个模块分配任务给 `详细设计师` 来创建详细设计并完善任务列表。
-4.  **模块交付**: 对于每个模块，`方案设计主管` 分配任务给一个 `模块交付主管`。
-    *   `模块交付主管` 分配编码任务给 `实施开发工程师`，分配初步测试任务给 `质量保证测试工程师`。
-    *   开发人员更新 `Function_Reference_Table.csv`。
-5.  **最终验证**: 一旦 `模块交付主管` 报告模块初步完成，`方案设计主管` 分配任务给 `质量保证测试工程师` 进行最终的需求验证。
-6.  **提交或返工**:
-    *   **通过**: `方案设计主管` 将模块提交到 Git。
-    *   **失败 (次要问题)**: `方案设计主管` 分配任务给 `模块交付主管` 来管理修复和重新测试。循环从步骤 5 开始。
-    *   **失败 (主要问题)**: `方案设计主管` 可能会触发模块的重新设计/重新实现，从再次分配任务给 `详细设计师` 开始。
-7.  此过程为所有模块重复进行。
+1.  **发现与需求**: `项目编排者` 与用户一起最终确定需求 (`Markdown/ProjectDocs/Requirements_Specification_Document.md`)。
+2.  **全面设计**: `项目编排者` 分配任务给 `首席设计架构师` 以：
+    *   定义系统架构、文件结构、技术栈 (`Markdown/ProjectDocs/Outline_Design_Document.md`)。
+    *   定义总体测试策略，包括环境、账户和规划线性测试 (`Markdown/ProjectDocs/Test_Strategy_Plan.md`)。
+    *   初始化本地 Git 仓库并创建 `.gitignore`。
+    *   为所有模块：创建详细设计 (`Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_Design.md`) 和详细的开发任务列表 (`Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_TaskList.md`)。
+3.  **模块开发**: 对于每个模块，`项目编排者` 分配任务给一个 `模块开发主管`。
+    *   `模块开发主管` 阅读所有相关的项目和模块文档，然后从其模块的任务列表中委派开发任务给 `实施开发工程师`，并指示他们阅读模块文档。
+    *   开发人员编写代码，修复自己的错误，并报告任务完成情况。
+    *   `模块开发主管` 对已完成的开发子部分执行验收检查，如果满意，则使用详细消息将其提交到 Git。此阶段可以处理次要的、最近的回滚。
+    *   `模块开发主管` 报告其模块的所有开发任务何时完成并提交。
+4.  **全面测试**: 一旦所有模块完成开发，`项目编排者` 分配任务给 `质量保证测试工程师` 以：
+    *   阅读所有相关文档。
+    *   验证/准备测试环境。
+    *   执行 `Test_Strategy_Plan.md` 中定义的所有测试（模块、集成、系统、端到端、回归、延迟测试）。
+    *   报告错误。
+5.  **错误修复**: 如果发现错误，`项目编排者` 分配任务给相关的 `模块开发主管` 以协调 `实施开发工程师` 进行修复。然后测试人员验证修复。此循环重复进行，直到软件达到质量标准。
+6.  **最终验证与发布**:
+    *   `项目编排者` 根据全面的测试结果与用户确认项目是否满足所有需求。
+    *   **主要回滚 (灾难性故障)**: 如果测试显示主要的、无法修复的问题，`项目编排者` 可以在用户确认后，执行 `git reset --hard` 将有问题的模块（或更多）回滚到其开发开始之前的状态，然后重新启动这些部分的设计/开发。
+    *   （如果成功，项目编排者将执行正式的发布过程，如打标签，此处未明确详述，但在验证后是隐含的步骤）。
+7.  此过程旨在实现顺序流程，特别是架构师尽可能规划线性开发/测试。
 
 ### 关键产出物
 
-*   `Markdown/Requirements_Specification_Document.md`: 总体项目需求。
-*   `Markdown/Outline_Design_Document.md`: 高级系统架构和技术栈。
-*   `Markdown/Preliminary_HighLevel_TaskList.md`: 架构师进行的任务初步分解。
-*   `Markdown/[ModuleName]_Detailed_Design.md`: 特定模块的详细技术设计。
-*   `Markdown/[ModuleName]_Detailed_TaskList.md`: 特定模块的完善且详细的任务。
-*   `Markdown/Function_Reference_Table.csv`: 一个 CSV 文件，列出所有重要函数及其描述、输入/输出等，由开发人员维护。
-    *   格式: `"文件路径","函数名","函数描述","输入参数","输出参数","备注"`
-*   `Markdown/[ModuleName]_Final_Validation_Report.md`:关于模块是否满足需求的报告。
-*   `Markdown/Project_Changelog.md` (可选): 用于记录主要事件，如提交或返工决策。
-*   `.gitignore`: 指定 Git 有意不跟踪的文件 (默认包含 `Markdown/` 以用于工作草稿)。
+*   `Markdown/ProjectDocs/Requirements_Specification_Document.md`: 总体项目需求。
+*   `Markdown/ProjectDocs/Outline_Design_Document.md`: 高级系统架构、技术栈和项目文件结构。
+*   `Markdown/ProjectDocs/Test_Strategy_Plan.md`: 总体测试策略、方法、环境、测试账户以及由于依赖关系而延迟的测试的说明。
+*   `Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_Design.md`: 特定模块的详细技术设计。
+*   `Markdown/Modules/[ModuleName]/[ModuleName]_Detailed_TaskList.md`: 特定模块的详细开发任务。
+*   测试产出物 (测试用例, Bug报告, 测试总结) 存储在 `Markdown/Testing/` 或 `Markdown/Modules/[ModuleName]/[子文件夹]/`。
+*   `Markdown/ProjectDocs/Project_Changelog.md` (可选): 用于记录主要事件。
+*   `.gitignore`: 指定 Git 有意不跟踪的文件 (包含 `Markdown/`)。
 
 ### 如何使用
 
 这些定义旨在用作 AI 助手（如 Roo Code）中的自定义模式，该助手支持：
-*   工具使用 (特别是 `new_task`, `execute_command`, `write_to_file`, `insert_content`, `ask_followup_question`)。
+*   工具使用 (特别是 `new_task`, `execute_command`, `write_to_file`, `read_file`, `ask_followup_question`)。
 *   跨子任务的持久上下文和内存（或传递必要上下文的机制）。
 *   解析并根据为每个模式的 `customInstructions` 中提供的详细指令执行操作的能力。
 
