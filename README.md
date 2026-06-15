@@ -1,5 +1,31 @@
 # AI-Powered Software Development Workflow: A Multi-Role Model (AI 驱动的软件开发工作流：多角色模型)
 
+<!-- starswhere-docs-overview -->
+
+## 项目概览
+
+**定位**：一个 Roo Code 自定义模式配置仓库，用于组织 AIMS 开发流程中的 agent/mode 行为。
+
+**核心功能**：
+- 保存 custom_modes.yaml 配置
+- README 说明模式用途和使用方式
+- 适合在 Roo Code 中导入或对齐团队开发模式
+- 便于集中维护 prompt/mode 规范
+
+**技术栈**：YAML 配置、Roo Code 自定义模式。
+
+**目录与模块**：`custom_modes.yaml` 是核心配置；`README.md` 是模式说明。
+
+**使用方式**：在 Roo Code 或兼容工具中导入 `custom_modes.yaml`，按 README 选择对应模式。
+
+**配置说明**：模式名称、角色、规则和工作流都定义在 YAML 中。
+
+**适用场景**：适合规范 AI 辅助开发角色、项目协作流程和特定工程模式。
+
+**注意事项**：模式配置会影响 AI 行为，更新前应确认目标工具版本和字段兼容性。
+
+<!-- /starswhere-docs-overview -->
+
 ## 🇬🇧 English
 
 ### Introduction
